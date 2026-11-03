@@ -60,6 +60,7 @@ $manifest = [ordered]@{
 $latest = Join-Path $out 'latest.json'
 [IO.File]::WriteAllText($latest, ($manifest | ConvertTo-Json -Depth 5))
 
-gh release create "v$Version" $setup $latest --repo $repo --title "Free PDF $Version" --notes $Notes --latest
+$commit = (git -C $root rev-parse HEAD).Trim()
+gh release create "v$Version" $setup $latest --repo $repo --target $commit --title "Free PDF $Version" --notes $Notes --latest
 if ($LASTEXITCODE) { throw "Publishing failed" }
 Write-Host "Done. Installed copies will offer v$Version the next time they start."

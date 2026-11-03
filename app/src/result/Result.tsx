@@ -9,6 +9,7 @@ import { clearFiles, setDone, setFiles, useSession } from "../state/session";
 import { getTool, nextTools, toolRoute } from "../tools/registry";
 import type { ToolDef } from "../tools/registry";
 import { NotFound } from "../tools/ToolPage";
+import { SendTo } from "../share/SendTo";
 import { FileName } from "../ui/FileName";
 
 function headline(count: number): string {
@@ -44,6 +45,7 @@ function OutputRow({ output }: { output: EngineOutput }) {
         {pdf ? <button type="button" class="btn primary" onClick={() => readHere(output.path)}><BookOpen size={16} /> Open in reader</button> : null}
         <button type="button" class={pdf ? "btn" : "btn primary"} onClick={() => void openFile(output.path)}><ExternalLink size={16} /> {pdf ? "Open in other app" : "Open"}</button>
         <button type="button" class="btn" onClick={() => void showInFolder(output.path)}><FolderOpen size={16} /> Show in folder</button>
+        <SendTo path={output.path} compact boxed />
       </div>
     </li>
   );

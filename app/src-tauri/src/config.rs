@@ -42,8 +42,18 @@ fn runtime_python(dir: &Path) -> PathBuf {
 }
 
 fn runtime_dir() -> Option<PathBuf> {
-    let dir = std::env::current_exe().ok()?.parent()?.join("runtime");
+    let dir = exe_dir()?.join("runtime");
     runtime_python(&dir).is_file().then_some(dir)
+}
+
+fn exe_dir() -> Option<PathBuf> {
+    Some(std::env::current_exe().ok()?.parent()?.to_path_buf())
+}
+
+/// The engine package the installer copies next to the exe.
+fn installed_engine() -> Option<PathBuf> {
+    let dir = exe_dir()?.join("engine");
+    dir.join("freepdf_engine").is_dir().then_some(dir)
 }
 
 fn dev_root() -> PathBuf {
@@ -62,6 +72,9 @@ fn python_path() -> PathBuf {
 fn engine_dir() -> PathBuf {
     if let Some(p) = std::env::var_os("FREEPDF_ENGINE") {
         return PathBuf::from(p);
+    }
+    if let Some(dir) = installed_engine() {
+        return dir;
     }
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("engine")
 }

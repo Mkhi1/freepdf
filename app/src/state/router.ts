@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 
 export type Route =
-  | { name: "home" | "history" }
+  | { name: "home" | "history" | "devices" }
   | { name: "tools"; category: string }
   | { name: "tool" | "work" | "result" | "editor"; id: string };
 
@@ -9,6 +9,7 @@ export function parseHash(hash: string): Route {
   const [path, query = ""] = hash.replace(/^#\/?/, "").split("?");
   const [section, id] = path.split("/");
   if (section === "history") return { name: "history" };
+  if (section === "devices") return { name: "devices" };
   if (section === "tools") return { name: "tools", category: new URLSearchParams(query).get("c") ?? "all" };
   if ((section === "tool" || section === "work" || section === "result" || section === "editor") && id) {
     return { name: section, id };

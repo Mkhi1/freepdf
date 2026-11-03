@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free PDF</title>
+<style>
+:root{
+  --desk:#1b2236; --tray:#232c45; --tray-hi:#2c3755; --line:#3a4667;
+  --chalk:#eef1f7; --dim:#a9b3c7;
+  --paper:#fdfdfc; --ink:#1b2236; --ink-soft:#586277; --rule:#d9dde5;
+  --yellow:#ffec3d; --green:#a6f3b6; --blue:#a6e2ff; --pink:#ffabcc; --orange:#ffcb8c; --violet:#d6c5ff;
+  --ui:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --book:"Sitka Text",Georgia,serif;
+}
+*{box-sizing:border-box;margin:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+html,body{height:100%}
+body{background:var(--desk);color:var(--chalk);font:14px/1.45 var(--ui);overflow:hidden;display:flex;flex-direction:column}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.on-paper :focus-visible{outline-color:var(--ink)}
+[hidden]{display:none!important}
+
+.titlebar{height:44px;flex:none;display:grid;grid-template-columns:1fr minmax(240px,440px) 1fr;align-items:center;padding-left:14px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600}
+.brand svg{width:20px;height:24px}
+.brand button{padding:4px 6px;border-radius:6px}
+.search{height:30px;border-radius:8px;background:var(--tray);color:var(--dim);display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-size:13px}
+.search:hover{background:var(--tray-hi)}
+.winctl{justify-self:end;display:flex}
+.winctl span{width:46px;height:44px;display:grid;place-items:center;color:var(--dim);font-size:12px}
+
+.swipe{position:relative;isolation:isolate;display:inline-block;padding:0 .42em 0 .3em}
+.swipe::before{content:"";position:absolute;inset:.06em -.08em .02em -.12em;background:var(--tint);border-radius:.3em .7em .35em .6em/.5em .3em .6em .35em;transform:skewX(-7deg) rotate(-.5deg);z-index:-1}
+.yellow{--tint:var(--yellow)}.green{--tint:var(--green)}.blue{--tint:var(--blue)}
+.pink{--tint:var(--pink)}.orange{--tint:var(--orange)}.violet{--tint:var(--violet)}
+
+/* Home */
+.home{flex:1;min-height:0;display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,800px);gap:32px;padding:18px 32px 32px}
+.left{display:flex;flex-direction:column;gap:24px;min-height:0}
+.tray{flex:1;min-height:200px;border-radius:14px;background:var(--tray);display:flex;flex-direction:column;justify-content:flex-end;padding:28px;gap:6px;outline:2px solid transparent;outline-offset:-2px;position:relative;overflow:hidden}
+.stack{position:absolute;top:34px;right:44px;width:112px;height:150px}
+.stack i{position:absolute;inset:0;background:var(--paper);border-radius:2px;box-shadow:0 8px 18px #0d1326;transition:transform .16s ease-out}
+.stack i:nth-child(1){transform:rotate(-9deg) translateX(-18px);background:#cdd3df}
+.stack i:nth-child(2){transform:rotate(-3deg) translateX(-6px);background:#e6e9ef}
+.stack i:nth-child(3){transform:rotate(4deg) translateX(8px)}
+.stack i:nth-child(3)::before{content:"";position:absolute;left:14px;right:14px;top:22px;height:7px;background:var(--ink)}
+.stack i:nth-child(3)::after{content:"";position:absolute;left:12px;right:18px;top:44px;height:13px;background:var(--yellow)}
+body.dragging .stack i:nth-child(1){transform:rotate(-16deg) translateX(-44px)}
+body.dragging .stack i:nth-child(2){transform:rotate(-5deg) translateX(-14px) translateY(-6px)}
+body.dragging .stack i:nth-child(3){transform:rotate(9deg) translateX(22px)}
+.tray h1{font:400 34px/1.15 var(--book);letter-spacing:-.01em}
+.tray p{color:var(--dim);max-width:34ch}
+.primary{margin-top:14px;align-self:flex-start;background:var(--yellow);color:var(--ink);font-weight:600;padding:9px 18px;border-radius:8px}
+.primary:hover{background:#fff27a}
+body.dragging .tray{outline-color:var(--yellow);background:var(--tray-hi)}
+.left h2{font:600 14px var(--ui);margin-bottom:10px}
+.recent{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.file{text-align:left;min-width:0}
+.file .mini{display:block;aspect-ratio:.95;background:var(--paper);border-radius:2px;padding:12px 13px;overflow:hidden;transition:transform .12s}
+.file:hover .mini{transform:translateY(-2px)}
+.file .mini i{display:block;height:3px;background:#cfd4de;margin-bottom:6px}
+.file .mini i:first-child{height:5px;width:55%;background:var(--ink)}
+.file b{display:block;font-weight:500;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file small{color:var(--dim);font-size:12px}
+
+.contents{background:var(--paper);color:var(--ink);border-radius:3px;padding:30px 36px;box-shadow:0 18px 44px #090e1e;overflow:auto;min-height:0;display:flex;flex-direction:column}
+.contents header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px}
+.contents h1{font:400 34px/1.15 var(--book);letter-spacing:-.01em}
+.contents header p{color:var(--ink-soft);font-size:13px}
+.toc{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 30px}
+.group{margin-bottom:20px}
+.group h2{font:600 15px/1.3 var(--ui);margin:0 0 4px -.3em}
+.tool{display:flex;align-items:baseline;width:100%;font:16px/clamp(30px,5vh,42px) var(--book);text-align:left;border-radius:3px}
+.tool span:first-child{white-space:nowrap}
+.tool .dots{flex:1;margin:0 6px;border-bottom:1.5px dotted #a4acbb;transform:translateY(-4px);min-width:10px}
+.tool kbd{font:inherit;color:var(--ink-soft)}
+.tool:hover span:first-child{background:linear-gradient(transparent 12%,var(--tint) 12%,var(--tint) 92%,transparent 92%)}
+.tool:hover kbd{color:var(--ink)}
+
+/* Workspace */
+.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px}
+.desk{display:flex;flex-direction:column;min-height:0;padding:12px 32px 0}
+.filebar{display:flex;align-items:baseline;gap:14px;margin-bottom:16px}
+.filebar h1{font:400 24px/1.2 var(--book)}
+.filebar span{color:var(--dim);font-size:13px}
+.ghost{color:var(--dim);padding:4px 8px;border-radius:6px;margin-left:-8px;align-self:center}
+.ghost:hover{background:var(--tray);color:var(--chalk)}
+.pages{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:22px 22px;align-content:start;padding:4px 4px 28px}
+.page{text-align:center}
+.sheet{display:block;aspect-ratio:.72;background:var(--paper);border-radius:2px;padding:12% 11%;overflow:hidden;box-shadow:0 6px 14px #0a0f20;outline:3px solid transparent;outline-offset:2px;position:relative;isolation:isolate}
+.sheet i{display:block;height:2px;background:#c9ced9;margin-bottom:5px;position:relative}
+.sheet i.t{height:5px;background:var(--ink);margin-bottom:9px}
+.sheet i.h::after{content:"";position:absolute;left:-2px;right:-2px;top:-3px;bottom:-3px;background:var(--yellow);opacity:.75;z-index:-1}
+.page small{display:inline-block;color:var(--dim);margin-top:8px;font-size:12px;padding:0 6px}
+.page[aria-pressed=true] .sheet{outline-color:var(--yellow)}
+.page[aria-pressed=true] small{background:var(--yellow);color:var(--ink);font-weight:600;border-radius:3px}
+
+.panel{background:var(--paper);color:var(--ink);padding:26px 24px;display:flex;flex-direction:column;min-height:0;overflow:auto}
+.panel h2{font:400 26px/1.25 var(--book);margin:0 0 4px -.3em}
+.panel .sub{color:var(--ink-soft);margin-bottom:20px}
+.opt{display:grid;grid-template-columns:18px 1fr;gap:0 10px;padding:11px 0;border-top:1px solid var(--rule);cursor:pointer}
+.opt:last-of-type{border-bottom:1px solid var(--rule)}
+.opt input{margin:3px 0 0;accent-color:var(--ink);width:15px;height:15px}
+.opt b{font-weight:600}
+.opt small{grid-column:2;color:var(--ink-soft);font-size:13px}
+.estimate{margin-top:18px;font:16px/1.4 var(--book)}
+.spacer{flex:1;min-height:18px}
+.run{background:var(--ink);color:#fff;font-weight:600;padding:12px;border-radius:8px;width:100%;position:relative;overflow:hidden}
+.run:hover{background:#2b3553}
+.run:disabled{cursor:default;background:#2b3553}
+.run::after{content:"";position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--yellow)}
+.run.busy::after{width:100%;transition:width .55s linear}
+.where{color:var(--ink-soft);font-size:13px;text-align:center;margin-top:9px}
+.result{font:17px/1.4 var(--book);word-break:break-word}
+.result b{font-weight:600;display:block;margin-bottom:2px}
+.result span{color:var(--ink-soft);font:14px var(--ui)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
+.actions button{padding:9px;border:1px solid var(--line);border-radius:8px;font-weight:500}
+.actions button:hover{background:#eef0f4}
+.actions .run{grid-column:1/-1;border:0;color:#fff}
+.also{margin-top:22px;color:var(--ink-soft);font-size:13px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.also span{flex-basis:100%}
+.also button{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+
+/* Palette */
+.scrim{position:fixed;inset:0;background:#0b1020b0;display:flex;justify-content:center;align-items:flex-start;padding-top:12vh}
+.slip{width:min(560px,calc(100vw - 32px));background:var(--paper);color:var(--ink);border-radius:3px;box-shadow:0 22px 50px #060a17;animation:slip .13s ease-out}
+@keyframes slip{from{transform:translateY(-10px);opacity:0}}
+.slip input{width:100%;border:0;background:none;outline:0;font:21px var(--book);color:var(--ink);padding:18px 20px;border-bottom:1px solid var(--rule)}
+.slip ul{list-style:none;padding:6px;max-height:330px;overflow:auto}
+.slip li{display:flex;justify-content:space-between;gap:12px;padding:8px 14px;border-radius:5px;cursor:pointer;font:16px var(--book)}
+.slip li[aria-selected=true]{background:#eceef3}
+.slip li small{color:var(--ink-soft);font:13px var(--ui)}
+.slip mark{background:var(--yellow);color:inherit;padding:0 1px}
+.slip .none{color:var(--ink-soft);cursor:default;font:14px var(--ui)}
+
+@media (max-width:980px){
+  body{overflow:auto}
+  .home{grid-template-columns:1fr;padding:12px 16px 24px}
+  .tray{min-height:220px}
+  .work{grid-template-columns:1fr}
+  .desk{padding:12px 16px 0}
+  .toc{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .contents{padding:24px 20px}
+}
+@media (max-width:560px){.toc{grid-template-columns:1fr}.titlebar{grid-template-columns:auto 1fr}.winctl{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="titlebar">
+  <div class="brand"><button id="homeBtn" aria-label="Home"><span class="brand" style="gap:9px">
+    <svg viewBox="0 0 20 24" aria-hidden="true"><path d="M1 1h12l6 6v16H1z" fill="#fdfdfc"/><path d="M13 1v6h6z" fill="#c9ced9"/><path d="M4 12.5h12v4H4z" fill="#ffec3d"/></svg>
+    Free PDF</span></button></div>
+  <button class="search" id="searchBtn"><span>Search tools and files</span><span>Ctrl K</span></button>
+  <div class="winctl" aria-hidden="true"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></div>
+</div>
+
+<main class="home" id="home">
+  <section class="left">
+    <div class="tray" id="tray">
+      <div class="stack" aria-hidden="true"><i></i><i></i><i></i></div>
+      <h1>Drop files anywhere</h1>
+      <p>PDF, Word, PowerPoint, Excel or images. The right tools show up on their own.</p>
+      <button class="primary" id="chooseBtn">Choose files</button>
+    </div>
+    <div>
+      <h2>Recent</h2>
+      <div class="recent" id="recent"></div>
+    </div>
+  </section>
+  <section class="contents on-paper">
+    <header><h1>Contents</h1><p>Press a letter to start that tool</p></header>
+    <div class="toc" id="toc"></div>
+  </section>
+</main>
+
+<main class="work" id="work" hidden>
+  <section class="desk">
+    <div class="filebar">
+      <button class="ghost" id="backBtn">Home</button>
+      <h1 id="fileName" dir="ltr">sections.pdf</h1>
+      <span id="fileMeta">24 pages, 8.4 MB</span>
+    </div>
+    <div class="pages" id="pages"></div>
+  </section>
+  <aside class="panel on-paper" id="panel"></aside>
+</main>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="slip on-paper" role="dialog" aria-label="Search tools and files">
+    <input id="q" placeholder="Type a tool or file name" autocomplete="off" spellcheck="false">
+    <ul id="results" role="listbox"></ul>
+  </div>
+</div>
+
+<script>
+const GROUPS = [
+  { name: 'Pages', color: 'yellow', tools: [['Merge', 'M'], ['Split', 'S'], ['Organize pages', 'O'], ['Rotate', 'R'], ['Crop', 'K']] },
+  { name: 'Shrink and fix', color: 'green', tools: [['Compress', 'C'], ['Repair', 'F'], ['Make searchable (OCR)', 'T'], ['PDF/A for archiving', 'A']] },
+  { name: 'Into PDF', color: 'blue', tools: [['Word', 'W'], ['PowerPoint', 'P'], ['Excel', 'E'], ['Images', 'I'], ['Web page', 'H'], ['Scan', 'Y']] },
+  { name: 'Lock', color: 'violet', tools: [['Protect', 'L'], ['Unlock', '⇧L']] },
+  { name: 'Out of PDF', color: 'pink', tools: [['To Word', '⇧W'], ['To PowerPoint', '⇧P'], ['To Excel', '⇧E'], ['To images', '⇧I'], ['To text', '⇧T']] },
+  { name: 'Mark up', color: 'orange', tools: [['Edit', 'D'], ['Sign', 'G'], ['Watermark', 'V'], ['Page numbers', 'N'], ['Redact', 'B'], ['Compare', '=']] },
+];
+const TOOLS = GROUPS.flatMap(g => g.tools.map(([name, key]) => ({ name, key, color: g.color, group: g.name })));
+const COLUMNS = [[0, 1], [2, 3], [4, 5]];
+const RECENT = [['sections.pdf', 'Today'], ['التوكيد.pdf', 'Yesterday'], ['most_frequent.pdf', 'This week']];
+const COMPRESS_LEVELS = [
+  { id: 'small', label: 'Smallest', note: 'Text stays sharp, photos get softer', size: 1.6 },
+  { id: 'bal', label: 'Balanced', note: 'Good for sharing and studying', size: 2.1 },
+  { id: 'best', label: 'Best quality', note: 'No visible change, smaller savings', size: 4.9 },
+];
+const ORIGINAL_MB = 8.4;
+const PAGE_COUNT = 24;
+const RUN_MS = 600;
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+
+const swipe = (text, color) => el('span', `swipe ${color}`, text);
+
+function renderToc() {
+  COLUMNS.forEach(col => {
+    const column = el('div');
+    col.forEach(i => {
+      const g = GROUPS[i];
+      const box = el('div', `group ${g.color}`);
+      const h = el('h2');
+      h.append(swipe(g.name, g.color));
+      box.append(h);
+      g.tools.forEach(([name, key]) => {
+        const b = el('button', 'tool');
+        b.append(el('span', '', name), el('span', 'dots'), el('kbd', '', key));
+        b.onclick = () => openTool(name);
+        box.append(b);
+      });
+      column.append(box);
+    });
+    $('toc').append(column);
+  });
+}
+
+function renderRecent() {
+  RECENT.forEach(([name, when]) => {
+    const b = el('button', 'file');
+    const mini = el('span', 'mini');
+    [55, 92, 84, 96, 70].forEach(w => { const l = el('i'); l.style.width = `${w}%`; mini.append(l); });
+    const title = el('b', '', name);
+    b.append(mini, title, el('small', '', when));
+    title.dir = 'ltr';
+    b.onclick = () => openTool('Compress', name);
+    $('recent').append(b);
+  });
+}
+
+function renderPages() {
+  Array.from({ length: PAGE_COUNT }, (_, i) => i).forEach(i => {
+    const b = el('button', 'page');
+    b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', `Page ${i + 1}`);
+    const sheet = el('span', 'sheet');
+    const title = el('i', 't');
+    title.style.width = `${40 + (i * 17) % 40}%`;
+    sheet.append(title);
+    Array.from({ length: 13 }, (_, n) => n).forEach(n => {
+      const line = el('i', (i * 3 + n) % 11 === 4 ? 'h' : '');
+      line.style.width = `${72 + ((i + 3) * (n + 5) * 7) % 28}%`;
+      sheet.append(line);
+    });
+    b.append(sheet, el('small', '', String(i + 1)));
+    b.onclick = () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+    $('pages').append(b);
+  });
+}
+
+function suggestions(current) {
+  const row = el('div', 'also');
+  row.append(el('span', '', 'Also for this file'));
+  ['Split', 'To Word', 'Make searchable (OCR)'].filter(n => n !== current).forEach(n => {
+    const b = el('button', '', n);
+    b.onclick = () => renderTool(n);
+    row.append(b);
+  });
+  return row;
+}
+
+function renderCompress(panel, tool) {
+  panel.append(el('p', 'sub', 'Make this file smaller'));
+  const estimate = el('p', 'estimate');
+  const showEstimate = size => {
+    const saved = Math.round((1 - size / ORIGINAL_MB) * 100);
+    estimate.textContent = `About ${size} MB, ${saved}% smaller`;
+  };
+  let level = COMPRESS_LEVELS[1];
+  COMPRESS_LEVELS.forEach(l => {
+    const row = el('label', 'opt');
+    const radio = el('input');
+    radio.type = 'radio'; radio.name = 'level'; radio.checked = l === level;
+    radio.onchange = () => { level = l; showEstimate(l.size); };
+    row.append(radio, el('b', '', l.label), el('small', '', l.note));
+    panel.append(row);
+  });
+  showEstimate(level.size);
+  panel.append(estimate);
+  addRun(panel, tool, () => renderDone(tool, level.size));
+}
+
+function addRun(panel, tool, onDone) {
+  panel.append(suggestions(tool.name), el('div', 'spacer'));
+  const run = el('button', 'run', tool.name);
+  run.id = 'run';
+  run.onclick = () => {
+    run.disabled = true;
+    run.classList.add('busy');
+    setTimeout(onDone, RUN_MS);
+  };
+  panel.append(run, el('p', 'where', 'Saves next to the original'));
+}
+
+function renderTool(name) {
+  const tool = TOOLS.find(t => t.name === name) ?? TOOLS[0];
+  const panel = $('panel');
+  panel.replaceChildren();
+  const h = el('h2');
+  h.append(swipe(tool.name, tool.color));
+  panel.append(h);
+  if (tool.name === 'Compress') return renderCompress(panel, tool);
+  panel.append(el('p', 'sub', 'Options for this tool go here in the real app. This preview only draws Compress in full.'));
+  addRun(panel, tool, () => renderDone(tool));
+}
+
+function renderDone(tool, size = 2.1) {
+  const panel = $('panel');
+  const base = $('fileName').textContent.replace(/\.pdf$/i, '');
+  const saved = Math.round((1 - size / ORIGINAL_MB) * 100);
+  panel.replaceChildren();
+  const h = el('h2');
+  h.append(swipe('Compressed', 'green'));
+  const result = el('div', 'result');
+  const file = el('b', '', `${base} (compressed).pdf`);
+  file.dir = 'ltr';
+  result.append(file, el('span', '', `${size} MB, ${saved}% smaller than the original`));
+  const actions = el('div', 'actions');
+  const open = el('button', 'run', 'Open');
+  const folder = el('button', '', 'Show in folder');
+  const undo = el('button', '', 'Undo');
+  undo.onclick = () => renderTool(tool.name);
+  actions.append(open, folder, undo);
+  panel.append(h, result, actions, suggestions(tool.name));
+}
+
+function show(view) {
+  $('home').hidden = view !== 'home';
+  $('work').hidden = view !== 'work';
+}
+
+function openTool(name, file = 'sections.pdf') {
+  $('fileName').textContent = file;
+  renderTool(name);
+  show('work');
+  closePalette();
+}
+
+function matchIndices(text, query) {
+  const lower = text.toLowerCase();
+  const found = [...query.toLowerCase()].reduce((acc, ch) => {
+    if (!acc) return null;
+    const at = lower.indexOf(ch, acc.from);
+    return at < 0 ? null : { from: at + 1, hits: [...acc.hits, at] };
+  }, { from: 0, hits: [] });
+  return found ? found.hits : null;
+}
+
+function highlighted(text, hits) {
+  const box = el('span');
+  [...text].forEach((ch, i) => box.append(hits.includes(i) ? el('mark', '', ch) : document.createTextNode(ch)));
+  return box;
+}
+
+let active = 0;
+let matches = [];
+
+function renderResults() {
+  const q = $('q').value.trim();
+  matches = TOOLS
+    .map(tool => ({ tool, hits: matchIndices(tool.name, q) }))
+    .filter(m => m.hits)
+    .sort((a, b) => (a.hits[0] ?? 0) - (b.hits[0] ?? 0));
+  active = Math.min(active, Math.max(matches.length - 1, 0));
+  const list = $('results');
+  list.replaceChildren();
+  if (!matches.length) { list.append(el('li', 'none', `No tool matches "${q}"`)); return; }
+  matches.forEach((m, i) => {
+    const li = el('li');
+    li.setAttribute('role', 'option');
+    li.setAttribute('aria-selected', String(i === active));
+    li.append(highlighted(m.tool.name, m.hits), el('small', '', m.tool.group));
+    li.onclick = () => openTool(m.tool.name);
+    list.append(li);
+  });
+}
+
+function openPalette(seed = '') {
+  $('scrim').hidden = false;
+  $('q').value = seed;
+  active = 0;
+  renderResults();
+  $('q').focus();
+}
+
+function closePalette() { $('scrim').hidden = true; }
+
+function onPaletteKey(e) {
+  if (e.key === 'Escape') return closePalette();
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const step = e.key === 'ArrowDown' ? 1 : -1;
+    active = (active + step + matches.length) % Math.max(matches.length, 1);
+    renderResults();
+  }
+  if (e.key === 'Enter' && matches[active]) openTool(matches[active].tool.name);
+}
+
+function onGlobalKey(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); return openPalette(); }
+  if (!$('scrim').hidden) return;
+  if (e.key === 'Escape') return show('home');
+  if (e.ctrlKey || e.altKey || e.metaKey || $('home').hidden) return;
+  const pressed = `${e.shiftKey ? '⇧' : ''}${e.key.toUpperCase()}`;
+  const tool = TOOLS.find(t => t.key === pressed);
+  if (tool) openTool(tool.name);
+}
+
+function wire() {
+  $('searchBtn').onclick = () => openPalette();
+  $('homeBtn').onclick = () => show('home');
+  $('backBtn').onclick = () => show('home');
+  $('chooseBtn').onclick = () => openTool('Compress');
+  $('q').oninput = () => { active = 0; renderResults(); };
+  $('q').onkeydown = onPaletteKey;
+  $('scrim').onclick = e => { if (e.target === $('scrim')) closePalette(); };
+  document.addEventListener('keydown', onGlobalKey);
+  document.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragging'); });
+  document.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dragging'); });
+  document.addEventListener('drop', e => { e.preventDefault(); document.body.classList.remove('dragging'); openTool('Compress'); });
+}
+
+function startFromHash() {
+  const state = location.hash.slice(1);
+  if (state === 'workspace') openTool('Compress');
+  if (state === 'palette') openPalette('com');
+  if (state === 'done') { openTool('Compress'); renderDone(TOOLS.find(t => t.name === 'Compress')); }
+}
+
+renderToc();
+renderRecent();
+renderPages();
+wire();
+startFromHash();
+</script>
+</body>
+</html>

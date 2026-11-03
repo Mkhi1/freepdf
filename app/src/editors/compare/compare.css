@@ -1,0 +1,59 @@
+.cmp-setup { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 40px 24px; text-align: center; position: relative; }
+.cmp-setup .back { position: absolute; left: 24px; top: 20px; }
+.cmp-setup h1 { font-size: 30px; font-weight: 700; }
+.cmp-files { display: flex; align-items: center; gap: 12px; width: min(700px, 100%); }
+.cmp-file {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: center; padding: 18px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.cmp-file small { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11.5px; }
+.cmp-fname { max-width: 100%; font-weight: 650; }
+.cmp-modes { width: min(700px, 100%); }
+.cmp-progress, .cmp-need { width: min(420px, 100%); }
+.cmp-setup .error { width: min(700px, 100%); text-align: left; }
+
+.cmp-top { display: flex; align-items: center; gap: 18px; padding: 12px 24px 6px; }
+.cmp-backbtn { border: 0; background: none; padding: 0; }
+.cmp-result { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px 1fr; }
+.cmp-side { display: flex; flex-direction: column; min-height: 0; background: var(--surface); border-right: 1px solid var(--line); }
+.cmp-side-head { padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--line); }
+.cmp-side-head h2 { font-size: 16px; }
+.cmp-legend { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+.cmp-legend span { display: flex; align-items: center; gap: 8px; }
+.cmp-changes { list-style: none; margin: 0; padding: 6px; flex: 1; min-height: 0; overflow-y: auto; }
+.cmp-none { padding: 16px; }
+.cmp-change {
+  width: 100%; display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; padding: 7px 10px;
+  border: 0; border-radius: 8px; background: transparent; text-align: start;
+}
+.cmp-change:hover { background: var(--surface-2); }
+.cmp-change.on { background: var(--accent-soft); }
+.cmp-ctext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-change small { color: var(--muted); }
+.cmp-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.cmp-dot.removed, .cmp-change.removed .cmp-dot { background: #d64545; }
+.cmp-dot.added, .cmp-change.added .cmp-dot { background: #2f9e57; }
+.cmp-change.visual .cmp-dot { background: var(--accent); }
+.cmp-report { padding: 12px 16px 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.cmp-main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.cmp-note { display: flex; gap: 8px; align-items: center; margin: 8px 28px 0; }
+.cmp-heads { display: flex; gap: 18px; padding-top: 10px; color: var(--muted); font-size: 13px; }
+.cmp-heads span { flex: 1; display: flex; gap: 8px; min-width: 0; justify-content: center; }
+.cmp-heads b { color: var(--ink); }
+.cmp-scroll { flex: 1; min-height: 0; overflow-y: auto; outline: none; }
+.cmp-slot { position: absolute; left: 0; right: 0; display: flex; justify-content: center; }
+.cmp-row { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.cmp-label { color: var(--muted); font-size: 12.5px; height: 18px; }
+.cmp-pair { display: flex; gap: 18px; justify-content: center; }
+.cmp-page { position: relative; background: #fff; box-shadow: 0 0 0 1px var(--line), var(--shadow); overflow: hidden; }
+.cmp-page .thumb { position: absolute; inset: 0; }
+.cmp-page img { display: block; width: 100%; height: 100%; }
+.cmp-missing {
+  display: grid; place-items: center; text-align: center; padding: 16px; color: var(--muted);
+  border: 2px dashed var(--line); border-radius: 6px; font-size: 13px;
+}
+.mark { position: absolute; border-radius: 2px; mix-blend-mode: multiply; }
+.mark-removed { background: rgba(214, 69, 69, 0.28); box-shadow: 0 0 0 1px rgba(214, 69, 69, 0.8); }
+.mark-added { background: rgba(47, 158, 87, 0.28); box-shadow: 0 0 0 1px rgba(47, 158, 87, 0.8); }
+.mark.now { outline: 3px solid var(--accent); outline-offset: 2px; mix-blend-mode: normal; z-index: 2; }
+@media (max-width: 1000px) { .cmp-result { grid-template-columns: 260px 1fr; } }

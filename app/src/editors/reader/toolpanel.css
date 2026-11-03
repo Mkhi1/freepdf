@@ -1,0 +1,29 @@
+.rd-panel {
+  flex: none; width: 216px; padding: 6px 10px 14px; overflow-y: auto;
+  background: var(--surface); border-left: 1px solid var(--line);
+}
+.rd-panel.closed { width: 50px; padding: 6px 8px 14px; }
+.rd-panel-toggle {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 38px; padding: 0 6px; font-size: 16px; font-weight: 650;
+  color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer;
+}
+.rd-panel.closed .rd-panel-toggle { justify-content: center; padding: 0; }
+.rd-panel-toggle:hover { color: var(--accent); }
+.rd-panel-group { margin-top: 10px; }
+.rd-panel.closed .rd-panel-group + .rd-panel-group { padding-top: 8px; border-top: 1px solid var(--line); }
+.rd-panel-head {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; height: 26px; padding: 0 6px;
+  font-size: 12px; font-weight: 600; color: var(--muted); background: none; border: 0; border-radius: 6px; cursor: pointer;
+}
+.rd-panel-head:hover { color: var(--ink); }
+.rd-panel-tool {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 6px; font-size: 13px; text-align: left;
+  color: var(--ink); background: none; border: 0; border-radius: 8px; cursor: pointer;
+}
+.rd-panel.closed .rd-panel-tool { justify-content: center; padding: 0; }
+.rd-panel-tool:hover { background: var(--surface-2); }
+.rd-panel-icon {
+  display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 6px; color: var(--c);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+}
+.rd-panel-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

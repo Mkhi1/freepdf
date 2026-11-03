@@ -1,0 +1,31 @@
+.shell { display: flex; flex-direction: column; height: 100%; }
+.shell-body { flex: 1; min-height: 0; }
+.tabbar {
+  display: flex; align-items: flex-end; gap: 14px; flex: none; height: 44px; padding: 0 12px 0 14px;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.tabbar-logo { height: 24px; width: auto; align-self: center; flex: none; }
+.tabs { display: flex; align-items: flex-end; gap: 2px; flex: 1; min-width: 0; overflow: hidden; }
+.tab {
+  display: flex; align-items: center; gap: 6px; flex: 0 1 196px; min-width: 96px; height: 36px; padding: 0 6px 0 10px;
+  font-size: 13px; color: var(--muted); background: none; border: 1px solid transparent; border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+}
+.tab:hover { background: var(--surface-2); color: var(--ink); }
+.tab.on { color: var(--ink); background: var(--bg); border-color: var(--line); }
+.home-tab { flex: none; min-width: 0; padding: 0 14px; cursor: pointer; }
+.tab-open {
+  display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; height: 100%; padding: 0; font: inherit;
+  color: inherit; background: none; border: 0; cursor: pointer;
+}
+.tab-name { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab-close {
+  display: grid; place-items: center; flex: none; width: 22px; height: 22px; padding: 0; color: inherit;
+  background: none; border: 0; border-radius: 6px; cursor: pointer;
+}
+.tab-close:hover { background: var(--line); }
+.tab-add {
+  display: grid; place-items: center; flex: none; width: 30px; height: 30px; margin: 0 0 3px 4px; padding: 0;
+  color: var(--muted); background: none; border: 0; border-radius: 8px; cursor: pointer;
+}
+.tab-add:hover { background: var(--surface-2); color: var(--ink); }

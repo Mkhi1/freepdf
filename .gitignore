@@ -1,0 +1,17 @@
+# dependencies / envs
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# build output
+dist/
+app/src-tauri/target/
+app/src-tauri/gen/
+
+# misc
+*.log
+.env
+.env.*
+.DS_Store

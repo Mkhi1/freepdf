@@ -1,0 +1,8 @@
+.ri-lift { opacity: 0.88; box-shadow: var(--shadow); cursor: grabbing; touch-action: none; }
+[data-ri] { cursor: grab; user-select: none; position: relative; }
+[data-ri].ri-before::before, [data-ri].ri-after::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 4px; border-radius: 2px; background: var(--accent); z-index: 5;
+}
+[data-ri].ri-before::before { left: -9px; }
+[data-ri].ri-after::after { right: -9px; }
+.reorder-hint { margin-bottom: 12px; }

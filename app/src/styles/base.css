@@ -1,0 +1,160 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f3f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef2f5;
+  --ink: #14202b;
+  --muted: #566877;
+  --line: #d9e0e6;
+  --accent: #0e7490;
+  --accent-hover: #0b5f77;
+  --on-accent: #ffffff;
+  --accent-soft: #dff1f5;
+  --danger: #a1330f;
+  --danger-soft: #fbece6;
+  --shadow: 0 1px 2px rgba(20, 32, 43, 0.06), 0 6px 18px rgba(20, 32, 43, 0.06);
+  --radius: 12px;
+  --c-organize: #0e7490;
+  --c-optimize: #b45309;
+  --c-convert: #4f46e5;
+  --c-edit: #15803d;
+  --c-security: #475569;
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e141a;
+    --surface: #161f28;
+    --surface-2: #1d2833;
+    --ink: #e8eef2;
+    --muted: #9aacb9;
+    --line: #28343f;
+    --accent: #3fb8d4;
+    --accent-hover: #62c9e0;
+    --on-accent: #06222a;
+    --accent-soft: #14333c;
+    --danger: #f0a285;
+    --danger-soft: #3a2119;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.3);
+    --c-organize: #3fb8d4;
+    --c-optimize: #e0a04a;
+    --c-convert: #9b9cf5;
+    --c-edit: #5fcf86;
+    --c-security: #a3b3c2;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; }
+body {
+  margin: 0;
+  font: 400 14px/1.45 var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+h1, h2, h3, p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.cat-organize { --c: var(--c-organize); }
+.cat-optimize { --c: var(--c-optimize); }
+.cat-convert { --c: var(--c-convert); }
+.cat-edit { --c: var(--c-edit); }
+.cat-security { --c: var(--c-security); }
+
+/* Layout */
+.page { display: flex; flex-direction: column; height: 100%; position: relative; }
+.page.dragging::after {
+  content: ""; position: absolute; inset: 8px; border: 2px dashed var(--accent);
+  border-radius: 16px; pointer-events: none; z-index: 20;
+}
+.drop-veil {
+  position: absolute; inset: 0; z-index: 30; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--bg) 78%, transparent); pointer-events: none;
+}
+.drop-veil span {
+  background: var(--accent); color: var(--on-accent); padding: 14px 26px;
+  border-radius: 999px; font-size: 18px; font-weight: 600; box-shadow: var(--shadow);
+}
+
+/* Top bar */
+.topbar {
+  display: flex; align-items: center; gap: 28px; height: 56px; padding: 0 24px;
+  background: var(--surface); border-bottom: 1px solid var(--line); flex: none;
+}
+.logo { display: flex; align-items: center; }
+.logo img { display: block; height: 26px; width: auto; }
+.topnav { display: flex; gap: 4px; flex: 1; }
+.topnav a { padding: 6px 12px; border-radius: 8px; color: var(--muted); font-weight: 500; }
+.topnav a:hover { background: var(--surface-2); color: var(--ink); }
+.topnav a.on { color: var(--accent); background: var(--accent-soft); }
+.topbar-note { color: var(--muted); font-size: 13px; }
+.searchbox {
+  display: flex; align-items: center; gap: 8px; width: 240px; padding: 0 12px; height: 36px;
+  background: var(--surface-2); border: 1px solid transparent; border-radius: 10px; color: var(--muted);
+}
+.searchbox:focus-within { border-color: var(--accent); background: var(--surface); }
+.searchbox input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 16px;
+  border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; white-space: nowrap;
+}
+.btn:hover:not(:disabled) { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn.small { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn.big { height: 52px; padding: 0 28px; font-size: 16px; border-radius: 12px; }
+.btn:disabled { opacity: 0.5; }
+.icon-btn {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px;
+  border: 0; background: transparent; color: var(--muted);
+}
+.icon-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
+.icon-btn:disabled { opacity: 0.35; }
+.back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 500; }
+.back:hover { color: var(--accent); }
+
+/* Messages */
+.notice, .tip {
+  margin-top: 14px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13px;
+}
+.empty { margin-top: 40px; color: var(--muted); }
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+.fname {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  text-align: left;
+}
+
+/* Page pictures */
+.pageimg {
+  position: relative; width: 100%; background: #fff; border-radius: 4px; overflow: hidden;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.pageimg.bare { box-shadow: none; border-radius: 0; }
+.pageimg img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.pageimg-wait {
+  position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(128, 150, 165, 0.18) 50%, transparent 70%);
+  background-size: 200% 100%; animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .pageimg-wait { animation: none; } }
+.pageimg-fail { position: absolute; inset: 0; display: grid; place-items: center; color: #6b7c88; font-size: 12px; }
+
+/* Form controls */
+.input {
+  width: 100%; height: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); outline: 0;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+select.input { padding-right: 8px; }

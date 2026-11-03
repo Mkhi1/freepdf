@@ -3,6 +3,7 @@ import { FolderOpen, Search, Trash2, X } from "lucide-preact";
 import { isPdf, showInFolder } from "../engine/files";
 import { dayGroup, removeEntry, timeAgo, useHistory } from "../state/history";
 import type { HistoryEntry } from "../state/history";
+import { SendTo } from "../share/SendTo";
 import { FileName } from "../ui/FileName";
 import { HomeFrame } from "./HomeFrame";
 import { actionLabel, confirmClear, openEntry } from "./Recent";
@@ -20,6 +21,7 @@ function Row({ entry }: { entry: HistoryEntry }) {
         <button type="button" class="btn small" onClick={() => openEntry(entry)}>{isPdf(entry.path) ? "Read" : "Open"}</button>
         <button type="button" class="icon-btn" aria-label="Show in folder" title="Show in folder"
           onClick={() => void showInFolder(entry.path)}><FolderOpen size={16} /></button>
+        <SendTo path={entry.path} compact />
         <button type="button" class="icon-btn" aria-label="Remove from history" title="Remove from history"
           onClick={() => removeEntry(entry.path)}><X size={16} /></button>
       </div>

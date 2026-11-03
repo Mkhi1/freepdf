@@ -73,3 +73,4 @@
 .hist-name { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hist-meta { font-size: 13px; color: var(--muted); }
 .hist-actions { display: flex; align-items: center; gap: 4px; flex: none; }
+.sidemenu-credit { display: block; margin-top: 8px; font-weight: 600; color: var(--ink); }

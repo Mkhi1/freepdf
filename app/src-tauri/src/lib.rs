@@ -2,6 +2,7 @@ mod commands;
 mod config;
 mod engine;
 mod hub;
+mod share;
 mod smoke;
 
 use std::sync::Arc;
@@ -27,18 +28,29 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             commands::engine_call,
             commands::engine_cancel,
             commands::startup_file,
-            commands::ui_ready
+            commands::ui_ready,
+            share::share_info,
+            share::share_peers,
+            share::share_set_name,
+            share::share_add_peer,
+            share::share_send,
+            share::share_cancel,
+            share::share_answer
         ])
         .setup(|app| {
             let hub = Arc::new(Hub::new(app.handle()));
             app.manage(Arc::clone(&hub));
             if config::is_smoke() {
+                app.manage(share::disabled());
                 smoke::run(app.handle().clone(), hub);
             } else {
+                app.manage(share::start(app.handle()));
                 show_after_delay(app.handle().clone());
             }
             Ok(())

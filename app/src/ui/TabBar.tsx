@@ -8,7 +8,7 @@ import { FileName } from "./FileName";
 import "./tabbar.css";
 
 function isHome(route: Route): boolean {
-  return route.name === "home" || route.name === "tools" || route.name === "history";
+  return route.name === "home" || route.name === "tools" || route.name === "history" || route.name === "devices";
 }
 
 function goHome(): void {

@@ -18,15 +18,30 @@
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.pdf\shell\FreePDF"
 !macroend
 
-!macro NSIS_HOOK_PREINSTALL
-  ; The in-app updater starts this installer while Free PDF is still closing, and
-  ; the built-in check then fails with "Failed to kill Free PDF". Give it up to
-  ; 15 s to exit, then force it closed, so the update always goes through.
-  ${If} $UpdateMode = 1
-  ${OrIf} $PassiveMode = 1
-    nsExec::Exec `powershell -NoProfile -ExecutionPolicy Bypass -Command "$$p = Get-Process -Name '${MAINBINARYNAME}' -ErrorAction SilentlyContinue | Where-Object { $$_.Path -eq '${FREEPDF_EXE}' }; if ($$p) { $$p | Wait-Process -Timeout 15 -ErrorAction SilentlyContinue; $$p | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500 }"`
+; Replaces Tauri's check (utils.nsh), which uses Restart Manager on the exe. That
+; also lists antivirus scanning the file (e.g. McAfee Framework Host), cannot
+; close it, and aborts with "Failed to kill Free PDF", so updates never install.
+; This one only closes Free PDF itself: asks first in a normal install, and just
+; closes it during an update or a passive install.
+!macroundef CheckIfAppIsRunning
+!macro CheckIfAppIsRunning executablePath productName
+  !define FREEPDF_FIND `$$p = Get-Process -ErrorAction SilentlyContinue | Where-Object { $$_.Path -eq '${executablePath}' }`
+  nsExec::Exec `powershell -NoProfile -ExecutionPolicy Bypass -Command "${FREEPDF_FIND}; if ($$p) { exit 2 }"`
+  Pop $0
+  ${If} $0 == 2
+    ${IfNot} ${Silent}
+    ${AndIf} $UpdateMode <> 1
+    ${AndIf} $PassiveMode <> 1
+      MessageBox MB_OKCANCEL|MB_ICONINFORMATION "${productName} is open. Click OK to close it and continue." IDOK +2
+      Abort
+    ${EndIf}
+    nsExec::Exec `powershell -NoProfile -ExecutionPolicy Bypass -Command "${FREEPDF_FIND}; $$p | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue; $$p | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; ${FREEPDF_FIND}; if ($$p) { exit 1 }"`
     Pop $0
+    ${If} $0 == 1
+      Abort "${productName} is still running. Close it, then run the installer again."
+    ${EndIf}
   ${EndIf}
+  !undef FREEPDF_FIND
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL

@@ -18,6 +18,17 @@
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.pdf\shell\FreePDF"
 !macroend
 
+!macro NSIS_HOOK_PREINSTALL
+  ; The in-app updater starts this installer while Free PDF is still closing, and
+  ; the built-in check then fails with "Failed to kill Free PDF". Give it up to
+  ; 15 s to exit, then force it closed, so the update always goes through.
+  ${If} $UpdateMode = 1
+  ${OrIf} $PassiveMode = 1
+    nsExec::Exec `powershell -NoProfile -ExecutionPolicy Bypass -Command "$$p = Get-Process -Name '${MAINBINARYNAME}' -ErrorAction SilentlyContinue | Where-Object { $$_.Path -eq '${FREEPDF_EXE}' }; if ($$p) { $$p | Wait-Process -Timeout 15 -ErrorAction SilentlyContinue; $$p | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500 }"`
+    Pop $0
+  ${EndIf}
+!macroend
+
 !macro NSIS_HOOK_POSTINSTALL
   nsExec::Exec 'netsh advfirewall firewall delete rule name="${FREEPDF_FW_RULE}"'
   nsExec::Exec 'netsh advfirewall firewall add rule name="${FREEPDF_FW_RULE}" dir=in action=allow program="${FREEPDF_EXE}" protocol=TCP profile=private,domain enable=yes'

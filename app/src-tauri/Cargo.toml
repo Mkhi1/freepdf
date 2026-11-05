@@ -1,6 +1,6 @@
 [package]
 name = "free-pdf"
-version = "0.1.1"
+version = "0.1.2"
 description = "Free offline PDF tools"
 edition = "2021"
 rust-version = "1.77"

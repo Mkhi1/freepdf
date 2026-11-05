@@ -48,6 +48,8 @@ npx tauri dev
 
 - `app/`: Tauri 2 shell and UI (Preact, TypeScript, Vite). Rust in `app/src-tauri`.
 - `engine/`: Python engine (PyMuPDF and friends).
+- End-to-end tests (headless, against the real Python engine): start `node e2e/bridge.mjs` and `npx vite` in `app`, then `npm run e2e`. The bridge stands in for the Rust shell; reports go to `%LOCALAPPDATA%\FreePDF-dev\e2e`.
+- Without Microsoft Office, Word, Excel and PowerPoint files (.docx, .xlsx, .csv, .pptx) are rebuilt as HTML and printed by hidden Edge. Old formats (.doc, .xls, .ppt) still need Office.
 - Publish a new version: `.\release.ps1 -Version 0.1.1 -Notes "What changed"`. This needs the signing key in `%USERPROFILE%\.tauri`.
 
 See [PLAN.md](PLAN.md) for the architecture and [INSTALL-NOTES.md](INSTALL-NOTES.md) for installing on another PC.

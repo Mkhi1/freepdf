@@ -29,7 +29,7 @@ SECONDS_PER_MEGAPIXEL = 0.08
 SECONDS_PER_IMAGE = 0.05
 STARTUP_SECONDS = 1.0
 POLL_SECONDS = 0.1
-REPORT_EVERY_SECONDS = 0.4
+REPORT_EVERY_SECONDS = 0.25
 
 
 def _estimate_seconds(doc) -> float:
@@ -52,9 +52,11 @@ def _paced_progress(elapsed: float, estimate: float) -> tuple[float, str]:
 def _compress_in_child(job: Job, request: dict, estimate: float) -> None:
     flags = (NO_WINDOW | BELOW_NORMAL) if sys.platform == "win32" else 0
     package_root = Path(__file__).resolve().parents[2]
+    # stderr goes to a temp file: MuPDF warnings could fill a pipe and freeze the child.
+    errors = tempfile.TemporaryFile()
     proc = subprocess.Popen(
         [sys.executable, "-m", "freepdf_engine.tools._compress_worker"],
-        stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=errors,
         cwd=str(package_root), creationflags=flags,
     )
     try:
@@ -71,9 +73,13 @@ def _compress_in_child(job: Job, request: dict, estimate: float) -> None:
     except BaseException:
         proc.kill()
         proc.wait()
+        errors.close()
         raise
+    errors.seek(0)
+    details = errors.read().decode("utf-8", "replace")
+    errors.close()
     if proc.returncode != 0:
-        sys.stderr.write(proc.stderr.read().decode("utf-8", "replace"))
+        sys.stderr.write(details)
         raise ToolError("tool_failed", "Free PDF could not compress this file. It may be damaged. Try Repair a PDF first.")
 
 

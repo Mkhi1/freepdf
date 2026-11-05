@@ -41,7 +41,7 @@ def test_signature_styles_look_different(tmp_path):
     first, _ = make_signature(tmp_path, text="Sara Ali", font="script")
     second, info = make_signature(tmp_path, text="Sara Ali", font="brush")
     a, b = Image.open(first), Image.open(second)
-    assert info["font"].lower() == "brushsci.ttf"
+    assert info["font"].lower() in ("brushsci.ttf", "segoescb.ttf")  # Brush Script only ships with Office
     same = a.size == b.size and np.array_equal(np.asarray(a), np.asarray(b))
     assert not same
 

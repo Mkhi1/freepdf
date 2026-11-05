@@ -7,6 +7,7 @@ from ..core import Job, ToolError, output_path, require, result
 from ..office import check_office, run_office, win_path
 from ..registry import tool
 from .docx_ocr import write_docx_from_text
+from .docx_rtl import fix_rtl_docx
 from .docx_text import docx_text, fix_persian_forms, is_mostly_arabic, pdf_words_text, recall
 from .pdf_ocr import ocr_input
 
@@ -43,6 +44,8 @@ def _run_engine(engine: str, src: Path, dest: Path, job: Job, password: str | No
         fix_persian_forms(dest)
     else:
         pdf2docx_convert(src, dest, password)
+        if dest.exists():
+            fix_rtl_docx(dest)
     if not dest.exists() or dest.stat().st_size == 0:
         raise ToolError("tool_failed", "The converter produced an empty file.")
 

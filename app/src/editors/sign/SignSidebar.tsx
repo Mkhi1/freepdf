@@ -119,7 +119,7 @@ export function SignSidebar(p: SignSidebarProps) {
           {p.assets.map((a) => (
             <li key={a.id} style={a.id === p.armedId ? { borderColor: "var(--accent)", background: "var(--accent-soft)" } : undefined}>
               <button type="button" class="ed-sigbtn" style={{ flex: 1, minWidth: 0, background: "transparent", border: 0, padding: 0 }}
-                aria-label="Place this signature" onClick={() => p.onArm(a.id === p.armedId ? null : a.id)}>
+                aria-label="Place this signature" aria-pressed={a.id === p.armedId} onClick={() => p.onArm(a.id)}>
                 <AssetThumb asset={a} />
               </button>
               <button type="button" class="icon-btn" aria-label="Remove from list" onClick={() => p.onDropAsset(a.id)}><Trash2 size={15} /></button>

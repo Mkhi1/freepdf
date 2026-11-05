@@ -16,9 +16,12 @@ from ._mk_io import open_doc, save_doc, subset_fonts
 from .markup import _edit_ink
 
 SCALE = 4
+# Brush Script and French Script come with Office. Without them, fall back to a Windows handwriting
+# font that no other style uses, so every style still looks handwritten and different.
 HANDWRITING = {
-    "script": "segoesc.ttf", "print": "segoepr.ttf", "ink": "Inkfree.ttf", "brush": "BRUSHSCI.TTF",
-    "formal": "FRSCRIPT.TTF", "bold": "mvboli.ttf", "gabriola": "Gabriola.ttf",
+    "script": ("segoesc.ttf",), "print": ("segoepr.ttf",), "ink": ("Inkfree.ttf",),
+    "brush": ("BRUSHSCI.TTF", "segoescb.ttf"), "formal": ("FRSCRIPT.TTF", "segoeprb.ttf"),
+    "bold": ("mvboli.ttf",), "gabriola": ("Gabriola.ttf",),
 }
 ARABIC_HANDWRITING = ("aldhabi.ttf", "majalla.ttf", "arial.ttf")
 DEFAULT_STYLE = "script"
@@ -29,10 +32,11 @@ def _signature_font(style: str | None, text: str) -> str:
         for name in ARABIC_HANDWRITING:
             if (tf.FONTS_DIR / name).is_file():
                 return name
-    name = HANDWRITING.get(str(style or DEFAULT_STYLE).lower(), HANDWRITING[DEFAULT_STYLE])
-    if not (tf.FONTS_DIR / name).is_file():
-        name = "arial.ttf"
-    return name
+    candidates = HANDWRITING.get(str(style or DEFAULT_STYLE).lower(), HANDWRITING[DEFAULT_STYLE])
+    for name in (*candidates, *HANDWRITING[DEFAULT_STYLE]):
+        if (tf.FONTS_DIR / name).is_file():
+            return name
+    return "arial.ttf"
 
 
 def _alpha_png(path: str) -> bytes:

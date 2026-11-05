@@ -65,7 +65,7 @@
 .error svg { flex: none; margin-top: 2px; }
 .note { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 13px; }
 .progress .bar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
-.progress .bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.2s; }
+.progress .bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.3s linear; }
 .progress-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; color: var(--muted); font-size: 13px; }
 .progress-row span { display: inline-flex; align-items: center; gap: 6px; }
 

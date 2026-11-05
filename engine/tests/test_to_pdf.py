@@ -12,6 +12,7 @@ from PIL import Image
 import samples_convert as S
 from freepdf_engine.core import Job, ToolError
 from freepdf_engine.office import run_office
+from freepdf_engine.tools.to_pdf import _office_installed as office_installed
 from freepdf_engine.registry import TOOLS
 import freepdf_engine.tools.to_pdf  # noqa: F401  (registers tools)
 
@@ -86,6 +87,7 @@ def test_merge_output_and_separate(tmp_path):
     assert err.value.code == "bad_args"
 
 
+@pytest.mark.skipif(not office_installed("word"), reason="needs Microsoft Word")
 def test_office_hang_is_killed_with_clear_error():
     before = count_office("winword.exe")
     start = time.time()

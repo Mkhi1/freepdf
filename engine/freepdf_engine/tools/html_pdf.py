@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
@@ -153,7 +154,7 @@ def _print_params(args: dict, content_height_px: float) -> dict:
     return {**base, "paperWidth": width, "paperHeight": height}
 
 
-def _render(cdp: Cdp, url: str, args: dict) -> bytes:
+def _render(cdp: Cdp, url: str, params_for: Callable[[float], dict]) -> bytes:
     target = cdp.call("Target.createTarget", {"url": "about:blank"})["targetId"]
     session = cdp.call("Target.attachToTarget", {"targetId": target, "flatten": True})["sessionId"]
     cdp.call("Page.enable", session=session)
@@ -164,7 +165,7 @@ def _render(cdp: Cdp, url: str, args: dict) -> bytes:
     time.sleep(0.4)
     measure = "Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)"
     height = cdp.call("Runtime.evaluate", {"expression": measure, "returnByValue": True}, session)["result"].get("value", 0)
-    pdf = cdp.call("Page.printToPDF", _print_params(args, float(height)), session)
+    pdf = cdp.call("Page.printToPDF", params_for(float(height)), session)
     return base64.b64decode(pdf["data"])
 
 
@@ -176,7 +177,7 @@ def _name_for(resolved: str) -> Path:
     return Path(stem[:60] + ".html")
 
 
-def _fetch_pdf(job: Job, resolved: str, args: dict) -> bytes:
+def _fetch_pdf(job: Job, resolved: str, params_for: Callable[[float], dict]) -> bytes:
     profile = tempfile.mkdtemp(prefix="freepdf-edge-")
     proc = None
     cdp = None
@@ -185,7 +186,7 @@ def _fetch_pdf(job: Job, resolved: str, args: dict) -> bytes:
         proc, ws_url = _launch(profile)
         cdp = Cdp(ws_url)
         job.progress(0.3, "Loading the page")
-        return _render(cdp, resolved, args)
+        return _render(cdp, resolved, params_for)
     except ToolError:
         raise
     except Exception as err:
@@ -198,11 +199,20 @@ def _fetch_pdf(job: Job, resolved: str, args: dict) -> bytes:
         shutil.rmtree(profile, ignore_errors=True)
 
 
+CSS_PAGE = {"printBackground": True, "preferCSSPageSize": True, "displayHeaderFooter": False,
+            "marginLeft": 0, "marginRight": 0, "marginTop": 0, "marginBottom": 0}
+
+
+def print_html_file(job: Job, page: Path) -> bytes:
+    """Prints a local HTML file that sets its own page size and margins with @page."""
+    return _fetch_pdf(job, page.resolve().as_uri(), lambda _height: CSS_PAGE)
+
+
 @tool("html_to_pdf")
 def html_to_pdf(job: Job, args: dict) -> dict:
     resolved = resolve_source(args.get("source", ""))
     _margin_inches(args)
-    data = _fetch_pdf(job, resolved, args)
+    data = _fetch_pdf(job, resolved, lambda height: _print_params(args, height))
     named = _name_for(resolved)
     local = urlparse(resolved).scheme == "file"
     out_dir = args.get("out_dir") or (str(named.parent) if local else str(Path(os.path.expanduser("~")) / "Documents"))

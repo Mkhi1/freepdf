@@ -17,6 +17,7 @@ from freepdf_engine.registry import TOOLS
 import freepdf_engine.tools.from_pdf  # noqa: F401  (registers tools)
 import freepdf_engine.tools.optimize  # noqa: F401
 import freepdf_engine.tools.to_pdf  # noqa: F401
+from freepdf_engine.tools.to_pdf import _office_installed as office_installed
 from freepdf_engine.tools.ocr_quality import reading_is_trustworthy
 from freepdf_engine.tools.pdf_excel import _split_line, to_value
 from freepdf_engine.tools.ppt_page import MAX_PICTURE_PIXELS, _picture_dpi, strip_text
@@ -417,7 +418,7 @@ def docx_all_text(path: Path) -> str:
     """Every w:t in the document, including text boxes and nested tables that python-docx does not walk."""
     with zipfile.ZipFile(path) as z:
         xml = z.read("word/document.xml").decode("utf-8")
-    xml = re.sub(r"</w:p>", "<w:t> </w:t>", xml)
+    xml = re.sub(r"</w:p>|<w:br[^>]*/>", "<w:t> </w:t>", xml)  # a line break separates words too
     return "".join(re.findall(r"<w:t(?: [^>]*)?>([^<]*)</w:t>", xml))
 
 
@@ -444,7 +445,10 @@ def test_word_mixed_language(samples):
     assert S.text_recall(" ".join(S.ENGLISH_LINES + S.ARABIC_LINES), text) >= 0.98
 
 
-@pytest.mark.parametrize("engine", ["word", "pdf2docx"])
+@pytest.mark.parametrize("engine", [
+    pytest.param("word", marks=pytest.mark.skipif(not office_installed("word"), reason="needs Microsoft Word")),
+    "pdf2docx",
+])
 def test_word_each_engine_works_alone(samples, engine):
     out = out_path(run("pdf_to_word", file=str(samples["report"]), engines=[engine]))
     assert S.text_recall(S.pdf_text(samples["report"]), docx_all_text(out)) >= 0.95

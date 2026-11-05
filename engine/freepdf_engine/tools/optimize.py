@@ -1,4 +1,6 @@
 """Optimize tools: compress, repair, pdfa, ocr."""
+import json
+import math
 import os
 import re
 import shutil
@@ -22,6 +24,59 @@ COMPRESS_LEVELS = {
 }
 
 
+# Rough cost of the image rewrite, used only to pace the progress bar while the child process works.
+SECONDS_PER_MEGAPIXEL = 0.08
+SECONDS_PER_IMAGE = 0.05
+STARTUP_SECONDS = 1.0
+POLL_SECONDS = 0.1
+REPORT_EVERY_SECONDS = 0.4
+
+
+def _estimate_seconds(doc) -> float:
+    seen, pixels = set(), 0
+    for page in doc:
+        for image in page.get_images(full=True):
+            if image[0] not in seen:
+                seen.add(image[0])
+                pixels += image[2] * image[3]
+    return STARTUP_SECONDS + SECONDS_PER_MEGAPIXEL * pixels / 1e6 + SECONDS_PER_IMAGE * len(seen)
+
+
+def _paced_progress(elapsed: float, estimate: float) -> tuple[float, str]:
+    """Climbs steadily toward 90% and never stalls or claims to be done early."""
+    value = 0.05 + 0.85 * (1 - math.exp(-elapsed / estimate))
+    message = "Recompressing images" if elapsed < 1.5 * estimate else "Still working. Big pictures take a while"
+    return value, message
+
+
+def _compress_in_child(job: Job, request: dict, estimate: float) -> None:
+    flags = (NO_WINDOW | BELOW_NORMAL) if sys.platform == "win32" else 0
+    package_root = Path(__file__).resolve().parents[2]
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "freepdf_engine.tools._compress_worker"],
+        stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        cwd=str(package_root), creationflags=flags,
+    )
+    try:
+        proc.stdin.write(json.dumps(request).encode("utf-8"))
+        proc.stdin.close()
+        started = last_report = time.monotonic()
+        while proc.poll() is None:
+            now = time.monotonic()
+            if now - last_report >= REPORT_EVERY_SECONDS:
+                job.progress(*_paced_progress(now - started, estimate))
+                last_report = now
+            job.check_cancelled()
+            time.sleep(POLL_SECONDS)
+    except BaseException:
+        proc.kill()
+        proc.wait()
+        raise
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stderr.read().decode("utf-8", "replace"))
+        raise ToolError("tool_failed", "Free PDF could not compress this file. It may be damaged. Try Repair a PDF first.")
+
+
 @tool("compress")
 def compress(job: Job, args: dict) -> dict:
     src = require_file(require(args, "file"))
@@ -31,13 +86,13 @@ def compress(job: Job, args: dict) -> dict:
     before = src.stat().st_size
     with tempfile.TemporaryDirectory(prefix="freepdf-compress-") as scratch:
         candidate = Path(scratch) / "out.pdf"
+        job.progress(0.02, "Looking at the pictures")
         with open_pdf(src, args.get("password")) as doc:
-            job.progress(0.1, "Recompressing images")
-            doc.rewrite_images(**COMPRESS_LEVELS[level])
-            job.progress(0.6, "Shrinking fonts")
-            doc.subset_fonts()
-            job.progress(0.8, "Saving")
-            save_pdf(doc, candidate, garbage=4, clean=True, deflate=True, deflate_fonts=True, use_objstms=1)
+            estimate = _estimate_seconds(doc)
+        request = {"src": str(src), "out": str(candidate), "password": args.get("password"),
+                   "settings": COMPRESS_LEVELS[level]}
+        _compress_in_child(job, request, estimate)
+        job.progress(0.95, "Saving")
         out_path = output_path(src, "compressed", out_dir=args.get("out_dir"))
         after = candidate.stat().st_size
         smaller = after < before

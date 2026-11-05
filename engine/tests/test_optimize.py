@@ -247,3 +247,37 @@ def test_pdf_to_word_with_ocr_keeps_the_recognised_english_and_arabic(scan, tmp_
     assert "invoice" in text.lower()
     assert len(re.findall("[؀-ۿ]", text)) >= 10
     assert "<w:bidi" in xml
+
+
+def _job(on_message):
+    import threading
+
+    from freepdf_engine.core import Job
+    cancel = threading.Event()
+    return Job("t", lambda message: on_message(message, cancel), cancel)
+
+
+def test_compress_progress_keeps_moving_and_never_goes_back(heavy, tmp_path):
+    from freepdf_engine.tools.optimize import compress
+    values = []
+    res = compress(_job(lambda m, _c: values.append(m["value"])), {"file": str(heavy), "out_dir": str(tmp_path)})
+    assert only(res).is_file()
+    assert values == sorted(values) and values[-1] >= 0.95
+
+
+def test_compress_paced_progress_climbs_but_stays_below_done():
+    from freepdf_engine.tools.optimize import _paced_progress
+    steps = [_paced_progress(t, 5.0)[0] for t in (0, 1, 5, 20, 1000)]
+    assert steps == sorted(steps) and steps[0] < 0.1 and steps[-1] <= 0.9
+
+
+def test_compress_stop_ends_the_work(heavy, tmp_path):
+    from freepdf_engine.tools.optimize import compress
+
+    def stop_when_started(message, cancel):
+        if message["value"] > 0.02:
+            cancel.set()
+    with pytest.raises(ToolError) as err:
+        compress(_job(stop_when_started), {"file": str(heavy), "out_dir": str(tmp_path)})
+    assert err.value.code == "cancelled"
+    assert not list(tmp_path.glob("*.pdf"))
